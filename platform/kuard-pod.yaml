@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kuard
+spec:
+  containers:
+    - image: ghcr.io/jburns24/k8s-up-and-running:blue
+      name: kuard
+      resources:
+        # A request for resources means this is the minimum that the server pod
+        # will be given. With out `limits` this pod will take more resources
+        # and in the case of things like memory if it is already allocated to
+        # the pod you will need to detroy and recreate it to reclaim the memory
+        requests:
+          cpu: "500m"
+          memory: "128Mi"
+        # 'limits' sets the upper bound resource limits for the pod
+        limits:
+          cpu: "1000m"
+          memory: "256Mi"
+      # Readyness probe determins when k8s should start sending requests to this pod
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: 8080
+        initialDelaySeconds: 30
+        timeoutSeconds: 1
+        periodSeconds: 10
+        failureThreshold: 3
+      # Used to test that the application is not deadlocked
+      livenessProbe:
+        httpGet:
+          path: /healthyo
+          port: 8080
+        initialDelaySeconds: 5
+        timeoutSeconds: 1
+        periodSeconds: 10
+        failureThreshold: 3
+      ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
